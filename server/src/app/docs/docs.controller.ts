@@ -6,7 +6,9 @@ import asyncHandler from 'express-async-handler'
 import { verifyToken } from '../middlewares/auth.middleware'
 import { ACCESS } from '../../config/config.auth'
 import { prisma } from '../prisma'
-import { DocFields, DocsFields } from '../utils/user.utils'
+import { DocFields } from '../utils/user.utils'
+
+import { DATABASE_ERROR, INNER_SERVICE_ERROR } from '../../config/config.error'
 
 import type { User } from '../../types/type.auth'
 import type { ResLoadData } from '../../types/type.docs'
@@ -78,11 +80,7 @@ export default {
                         })
             
                         if (!loadRes) {
-                            res.status(500).json({
-                                error: 'Server problems, try again later..',
-                                status: 'Create doc error!'
-                            })
-                            throw new Error('Db crashed!')
+                            throw DATABASE_ERROR
                         }
             
                         resData.push(
@@ -97,7 +95,7 @@ export default {
                 }
 
             } catch( err ) {
-                console.log( err )
+                throw INNER_SERVICE_ERROR
             }            
 
             res.status( 200 ).json(

@@ -1,58 +1,49 @@
-export class CustomError extends Error {
+export class MagicNetError extends Error {
   constructor(
     public readonly statusCode: number,
-    public readonly responseData: Record<string, unknown>,
     message: string = ''
   ) {
     super(message)
-    this.name = 'CustomError'
+    this.name = 'MagicNetError'
   }
 }
 
-export const EMAIL_NOT_VERIFIED = new CustomError(
+export const TOKEN_EXPIRED = new MagicNetError(
   401,
-  { error: 'Email isn\'t verified.', status: 'Verify email error!' },
-  'Email isn\'t verified.'
+  'Invalid or missing token!'
 )
 
-export const INVALID_CREDENTIALS = new CustomError(
+export const EMAIL_NOT_VERIFIED = new MagicNetError(
   401,
-  { error: 'Email or password is incorrect.', status: 'Auth error!' },
-  'Email or password is incorrect.'
+  'Email isn\'t verified!'
 )
 
-export const DATABASE_ERROR = new CustomError(
-  500,
-  { error: 'Server problems, try again later.', status: 'Internal Server Error' },
-  'Database operation failed.'
-)
-
-export const REDIS_ERROR = new CustomError(
-  503,
-  { error: 'Redis crashed!', status: 'Service Unavailable' },
-  'Redis service unavailable.'
-)
-
-export const TOKEN_EXPIRED = new CustomError(
+export const INVALID_CREDENTIALS = new MagicNetError(
   401,
-  { error: 'Token expired.', status: 'Unauthorized' },
-  'Access token has expired.'
+  'Email or password is incorrect!'
 )
 
-export const TOKEN_INVALID = new CustomError(
-  401,
-  { error: 'Invalid token.', status: 'Unauthorized' },
-  'Provided token is invalid.'
-)
-
-export const USER_NOT_FOUND = new CustomError(
+export const SECRET_CODE_NOT_VERIFIED = new MagicNetError(
   404,
-  { error: 'User not found.', status: 'Not Found' },
-  'Requested user does not exist.'
+  'Secret code isn`t verify!'
 )
 
-export const EMAIL_EXISTS = new CustomError(
+export const EMAIL_ALREADY_EXISTS = new MagicNetError(
   409,
-  { error: 'Email already exists.', status: 'Conflict' },
-  'This email address is already registered.'
+  'This email address is already registered!'
+)
+
+export const INNER_SERVICE_ERROR = new MagicNetError(
+  500,
+  'Server problems, try again later!'
+)
+
+export const REDIS_ERROR = new MagicNetError(
+  503,
+  'Redis service unavailable!'
+)
+
+export const DATABASE_ERROR = new MagicNetError(
+  504,
+  'Database operation failed!'
 )

@@ -28,8 +28,6 @@ export default {
             data: { ...data }
         })
 
-        console.log( result )
-
         res.status( 200 ).json( { message: 'updated info' } )
     } )
 }

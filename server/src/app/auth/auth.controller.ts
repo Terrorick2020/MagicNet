@@ -18,15 +18,15 @@ import {
     }  from '../../config/config.auth'
 
 import {
-    EMAIL_NOT_VERIFIED, 
-    INVALID_CREDENTIALS, 
-    DATABASE_ERROR, 
+    EMAIL_ALREADY_EXISTS,
+    DATABASE_ERROR,
     REDIS_ERROR,
     TOKEN_EXPIRED,
-    TOKEN_INVALID,
-    USER_NOT_FOUND,
-    EMAIL_EXISTS
-    } from '../../config/config.error'
+    EMAIL_NOT_VERIFIED, 
+    INVALID_CREDENTIALS,
+    INNER_SERVICE_ERROR,
+    SECRET_CODE_NOT_VERIFIED,
+} from '../../config/config.error'
 
 import Generator from './auth.generator'
 
@@ -50,13 +50,7 @@ export default {
             })
 
             if( isHaveUser ) {
-                res.status( 409 ).json(
-                    {
-                        error: 'This mail is busy..',
-                        status: 'Registration error'
-                    }
-                )
-                throw new Error( 'Mail is busy!' )
+                throw EMAIL_ALREADY_EXISTS
             }
 
             const userFound = await prisma.user.create({
@@ -81,13 +75,7 @@ export default {
             })
 
             if( !userFound || !info || !config ) {
-                res.status( 504 ).json(
-                    {
-                        error: 'Server problems, try again later..',
-                        status: 'Registration error'
-                    }
-                )
-                throw new Error( 'Db crashed!' )
+                throw DATABASE_ERROR
             }
 
             const access_token = Generator.generateToken( userFound.id, ACCESS )
@@ -107,7 +95,7 @@ export default {
                         status: 'Registration error!'
                     }
                 )
-                throw new Error( 'Mailer crashed!' )
+                throw DATABASE_ERROR
             }
 
             const redisResponse = await redis.set(
@@ -118,13 +106,7 @@ export default {
             )
 
             if( !redisResponse ) {
-                res.status( 504 ).json(
-                    {
-                        error: 'Server problems, try again later..',
-                        status: 'Registration error'
-                    }
-                )
-                throw new Error( 'Redis crashed!' )
+                throw REDIS_ERROR
             }
 
             res.cookie('refresh', refresh_token, {
@@ -152,13 +134,7 @@ export default {
             const userFound = await verifyToken( access_token, ACCESS )
 
             if ( !userFound ) {
-                res.status( 401 ).json(
-                    {
-                        error: 'Access token don`t valid..',
-                        status: 'Verify email error!'
-                    }
-                )
-                throw new Error('Not verify mail, token failed!')
+                throw TOKEN_EXPIRED
             }
 
             await prisma.user.update({
@@ -185,25 +161,13 @@ export default {
             })
 
             if( !userFound?.isVerify ) {
-                res.status( 401 ).json(
-                    {
-                        error: 'Email isn`t verify..',
-                        status: 'Verify email error!'
-                    }
-                )
-                throw new Error('Not verify email!')
+                throw EMAIL_NOT_VERIFIED
             }
 
             const isValidUserPassword = await verify( userFound?.password ? userFound.password : '', password )
 
             if( !userFound || !isValidUserPassword ) {
-                res.status( 401 ).json(
-                    {
-                        error: 'Email or password is incorrect..',
-                        status: 'Auth error!'
-                    }
-                )
-                throw new Error('Email or password is incorrect!')
+                throw INVALID_CREDENTIALS
             }
 
             const info = await prisma.info.findUnique({
@@ -241,13 +205,7 @@ export default {
             )
 
             if( !info || !config ) {
-                res.status( 504 ).json(
-                    {
-                        error: 'Server problems, try again later..',
-                        status: 'Login error'
-                    }
-                )
-                throw new Error( 'Db crashed!' )
+                throw DATABASE_ERROR
             }
 
             const access_token = Generator.generateToken( userFound.id, ACCESS )
@@ -261,13 +219,7 @@ export default {
             )
 
             if( !redisResponse ) {
-                res.status( 504 ).json(
-                    {
-                        error: 'Server problems, try again later..',
-                        status: 'Registration error'
-                    }
-                )
-                throw new Error( 'Redis crashed!' )
+                throw REDIS_ERROR
             }
 
             res.cookie('refresh', refresh_token, {
@@ -302,13 +254,7 @@ export default {
             const userFound = await verifyToken( refresh_token, REFRESH )
 
             if ( !userFound ) {
-                res.status( 401 ).json(
-                    {
-                        error:  'Token failed.',
-                        status: 'Update tokens error!'
-                    }
-                )
-                throw new Error( 'Not authorized, token failed!' )
+                throw TOKEN_EXPIRED
             }        
 
             let redisRefresh = await redis.get( `refresh_tokens:${ userFound.id }` )
@@ -328,13 +274,7 @@ export default {
             )
 
             if( !redisResponse ) {
-                res.status( 504 ).json(
-                    {
-                        error: 'Server problems, try again later..',
-                        status: 'Registration error'
-                    }
-                )
-                throw new Error( 'Redis crashed!' )
+                throw REDIS_ERROR
             }
 
             res.cookie('refresh', refresh_token, {
@@ -373,13 +313,7 @@ export default {
             })
 
             if( !delRes ) {
-                res.status( 504 ).json(
-                    {
-                        error: 'Server problems, try again later..',
-                        status: 'Delete user error'
-                    }
-                )
-                throw new Error( 'Db crashed!' )
+                throw DATABASE_ERROR
             }
 
             res.status( 200 ).json( { message: 'success' } )
@@ -398,13 +332,7 @@ export default {
             })
 
             if( !userFound ) {
-                res.status( 401 ).json(
-                    {
-                        error: 'Email isn`t verify..',
-                        status: 'Verify email error!'
-                    }
-                )
-                throw new Error('Not verify email!')
+                throw EMAIL_NOT_VERIFIED
             }
 
             const secret_code = Generator.generateSecretCode()
@@ -412,13 +340,7 @@ export default {
             const emailRespose = await sendRecoveryToEmail( email, secret_code )
 
             if( !emailRespose ) {
-                res.status( 504 ).json(
-                    {
-                        error: 'Server problems, try again later..',
-                        status: 'SendSecretCodeToEmail error!'
-                    }
-                )
-                throw new Error( 'Mailer crashed!' )
+                throw INNER_SERVICE_ERROR
             }
 
             const redisResponse = await redis.set(
@@ -429,13 +351,7 @@ export default {
             )
 
             if( !redisResponse ) {
-                res.status( 504 ).json(
-                    {
-                        error: 'Server problems, try again later..',
-                        status: 'Registration error'
-                    }
-                )
-                throw new Error( 'Redis crashed!' )
+                throw REDIS_ERROR
             }
 
             res.status( 202 ).json( { message: 'success' } )
@@ -454,25 +370,13 @@ export default {
             })
 
             if( !userFound ) {
-                res.status( 401 ).json(
-                    {
-                        error: 'Email isn`t verify..',
-                        status: 'Verify email error!'
-                    }
-                )
-                throw new Error('Not verify email!')
+                throw EMAIL_NOT_VERIFIED
             }
 
             const redisSecret = await redis.get( `secret_code:${ userFound.id }` )
 
             if( secret_code !== redisSecret ) {
-                res.status( 404 ).json(
-                    {
-                        error: 'Secret code isn`t verify..',
-                        status: 'Verify secret code error!'
-                    }
-                )
-                throw new Error( 'Incorrect secret code!' )
+                throw SECRET_CODE_NOT_VERIFIED
             }
 
             const reset_token = Generator.generateToken( userFound.id, RESET )
@@ -496,13 +400,7 @@ export default {
         if ( reset_token ) userFound = await verifyToken( reset_token, RESET )
 
         if( !userFound ) {
-            res.status( 403 ).json(
-                {
-                    error: 'Reset token is incorrect..',
-                    status: 'Rewrite password error!'
-                }
-            )
-            throw new Error( 'Incorrect reset token!' )
+            throw TOKEN_EXPIRED
         }
 
         const dbRes = await prisma.user.update({
@@ -515,13 +413,7 @@ export default {
         })
 
         if( !dbRes ) {
-            res.status( 500 ).json(
-                {
-                    error: 'Server problems, try again later..',
-                    status: 'Rewrite password error'
-                }
-            )
-            throw new Error( 'Db crashed!' )
+            throw DATABASE_ERROR
         }
 
         res.status( 200 ).json( { message: 'success' } )

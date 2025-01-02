@@ -1,18 +1,20 @@
 import { Request, Response, NextFunction } from "express"
+import { isDev } from "../../config/config.server"
+import type { IMagicNetError, IErrorResponse } from "../../types/type.error"
 
 
-export const notFound = ( req: Request, res: Response, next: NextFunction ) => {
-    const err = new Error( `Not found - ${ req.originalUrl }` )
-    res.status( 404 )
-    next( err )
-}
+export const errorHandler = ( err: IMagicNetError, _req: Request, res: Response, _next: NextFunction ) => {
+    const errResponse: IErrorResponse = {
+        message: err.message
+    }
 
-export const errorHandler = ( err: Error, _req: Request, res: Response, _next: NextFunction ) => {
-    const statusCode = res.statusCode === 200 ? 500: res.statusCode
+    if ( isDev ) {
+        errResponse.stack = err.stack ? err.stack : 'Not found this url!'
+    }
+
     res
-        .status( statusCode )
+        .status( err.statusCode )
         .json({
-            message: err.message,
-            stack:   process.env.NODE_ENV === 'production' ? null : err.stack
+            ...errResponse
         })
 }

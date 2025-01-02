@@ -10,6 +10,7 @@ import authRouter from './app/auth/auth.router'
 import configRouter from './app/config/config.router'
 import infoRouter from './app/info/info.router'
 import docsRouter from './app/docs/docs.router'
+import otherRouter from './app/other/other.router'
 
 import {
   PORT,
@@ -20,7 +21,7 @@ import {
 
 import { prisma } from './app/prisma'
 import { redis } from './app/redis'
-import { notFound, errorHandler } from './app/middlewares/error.middleware'
+import { errorHandler } from './app/middlewares/error.middleware'
 
 
 const start = async () => {
@@ -41,8 +42,8 @@ const start = async () => {
   app.use( `/${POSTFIX}`, configRouter )
   app.use( `/${POSTFIX}`, infoRouter )
   app.use( `/${POSTFIX}`, docsRouter )
+  app.use( otherRouter )
 
-  app.use( notFound )
   app.use( errorHandler )
 
 

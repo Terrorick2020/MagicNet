@@ -3,7 +3,7 @@ import ejs from 'ejs'
 import path from 'path'
 
 import { PORT } from '../../config/config.server'
-import { MAIL_SERVICE, MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS, MAIL_TO, MAIL_CONNECT } from '../../config/mailer.config'
+import { MAIL_SERVICE, MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS, MAIL_TO, MAIL_CONNECT } from '../../config/config.mailer'
 
 
 const transporter = nodemailer.createTransport( {
