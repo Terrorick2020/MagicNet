@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id               @default( autoincrement() )
+  createdAt DateTime @default( now() ) @map( "created_at" )
+  updatedAt DateTime @updatedAt        @map( "updated_at" )
+
+  email     String   @unique
+  password  String
+  role      Role     @default( Guest )
+  isVerify  Boolean  @default( false )
+
+  Info      Info[]
+  Config    Config[]
+  File      Docs[]
+}
+
+
+model Info {
+  id        Int      @id               @default( autoincrement() )
+  createdAt DateTime @default( now() ) @map("created_at")
+  updatedAt DateTime @updatedAt        @map("updated_at")
+
+  sphereDef String
+  direction String
+
+  name      String   @default("Не задано")
+  about     String   @default("Не задано")
+  nickname String    @default("Не задано")
+  phone    String    @default("Не задано")
+
+  userId    Int      @unique             @map( "user_id" ) 
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model Config {
+  id        Int      @id               @default( autoincrement() )
+  createdAt DateTime @default( now() ) @map( "created_at" )
+  updatedAt DateTime @updatedAt        @map( "updated_at" )
+
+  theme     String   @default("light")
+  lang      String   @default("ru")
+
+  userId    Int      @unique            @map( "user_id" ) 
+  User      User     @relation( fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade )
+}
+
+model Docs {
+  id         Int      @id               @default( autoincrement() )
+  createdAt  DateTime @default( now() ) @map( "created_at" )
+  updatedAt  DateTime @updatedAt        @map( "updated_at" )
+
+  name       String
+  data       Bytes
+  size       Int
+  date       BigInt
+  mimetype   String
+
+  userId     Int      @map( "user_id" ) 
+  User       User     @relation( fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade )
+}
+
+enum Role {
+  Admin
+  Guest
+}

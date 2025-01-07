@@ -1,3 +1,6 @@
+// @use "./components/mixins";
+
+
 * {
     margin: 0;
     padding: 0;
@@ -10,6 +13,15 @@ body {
     font-weight: 400;
     font-style: normal;
 }
+
+// h1 { @include fluid-text(40, 28) }
+// h2 { @include fluid-text(36, 26) }
+// h3 { @include fluid-text(32, 24) }
+// h4 { @include fluid-text(28, 22) }
+// h5 { @include fluid-text(24, 20) }
+// h6 { @include fluid-text(20, 18) }
+// body { @include fluid-text(18, 16) }
+// p  { @include fluid-text(16, 14) }
 
 :root {
     --primary-selection-bg-color: #12b99a;
